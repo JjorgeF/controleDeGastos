@@ -1,0 +1,6 @@
+{
+  "name": "Controle Financeiro",
+  "description": "Controle financeiro pessoal completo com suporte a banco de dados Firebase Firestore em tempo real, autenticação e visualização mensal.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

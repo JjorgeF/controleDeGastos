@@ -1,0 +1,156 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with role and settings",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "householdId": { "type": "string" },
+        "preferredColor": { "type": "string", "enum": ["blue", "pink", "emerald", "purple", "amber"] },
+        "role": { "type": "string", "enum": ["admin", "member"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "email"]
+    },
+    "Household": {
+      "title": "Household",
+      "description": "Shared workspace for couples or multi-user budgeting",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "ownerUid": { "type": "string" },
+        "members": { "type": "array", "items": { "type": "string" } },
+        "memberEmails": { "type": "array", "items": { "type": "string" } },
+        "inviteCode": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "ownerUid", "members", "inviteCode"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Financial transaction belonging to a user or household",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "householdId": { "type": "string" },
+        "createdByUid": { "type": "string" },
+        "createdByName": { "type": "string" },
+        "createdByColor": { "type": "string" },
+        "createdByEmail": { "type": "string" },
+        "description": { "type": "string" },
+        "amount": { "type": "number" },
+        "date": { "type": "string" },
+        "category": { "type": "string" },
+        "type": { "type": "string", "enum": ["income", "expense", "debt_payment", "loan_received", "benefit_income", "benefit_expense"] },
+        "debtId": { "type": "string" },
+        "loanId": { "type": "string" },
+        "person": { "type": "string" },
+        "location": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "description", "amount", "date", "category", "type"]
+    },
+    "Debt": {
+      "title": "Debt",
+      "description": "Debt tracking document",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "description": { "type": "string" },
+        "totalAmount": { "type": "number" },
+        "remainingAmount": { "type": "number" },
+        "monthlyAmount": { "type": "number" },
+        "startDate": { "type": "string" },
+        "category": { "type": "string" },
+        "isCompleted": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "description", "totalAmount", "remainingAmount", "startDate", "category", "isCompleted"]
+    },
+    "Loan": {
+      "title": "Loan",
+      "description": "Loan given/lent to others",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "description": { "type": "string" },
+        "totalAmount": { "type": "number" },
+        "remainingAmount": { "type": "number" },
+        "expectedMonthlyAmount": { "type": "number" },
+        "startDate": { "type": "string" },
+        "borrowerName": { "type": "string" },
+        "isCompleted": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "description", "totalAmount", "remainingAmount", "startDate", "borrowerName", "isCompleted"]
+    },
+    "UserSettings": {
+      "title": "UserSettings",
+      "description": "User specific categories and configurations",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "categories": { "type": "array", "items": { "type": "string" } },
+        "debtCategories": { "type": "array", "items": { "type": "string" } },
+        "benefitMembers": { "type": "array", "items": { "type": "string" } },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile document"
+    },
+    "/users/{userId}/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "User transactions"
+    },
+    "/users/{userId}/debts/{debtId}": {
+      "schema": "Debt",
+      "description": "User debts"
+    },
+    "/users/{userId}/loans/{loanId}": {
+      "schema": "Loan",
+      "description": "User loans"
+    },
+    "/users/{userId}/settings/general": {
+      "schema": "UserSettings",
+      "description": "User categories and custom settings"
+    },
+    "/households/{householdId}": {
+      "schema": "Household",
+      "description": "Shared household workspace"
+    },
+    "/households/{householdId}/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Household transactions"
+    },
+    "/households/{householdId}/debts/{debtId}": {
+      "schema": "Debt",
+      "description": "Household debts"
+    },
+    "/households/{householdId}/loans/{loanId}": {
+      "schema": "Loan",
+      "description": "Household loans"
+    },
+    "/households/{householdId}/settings/general": {
+      "schema": "UserSettings",
+      "description": "Household categories and custom settings"
+    }
+  }
+}

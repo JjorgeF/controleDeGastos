@@ -1,0 +1,76 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isHouseholdMember(householdId) {
+      return isAuthenticated();
+    }
+
+    // User profile document
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isOwner(userId);
+      allow delete: if false;
+
+      // Transactions subcollection (legacy support)
+      match /transactions/{transactionId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Debts subcollection (legacy support)
+      match /debts/{debtId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Loans subcollection (legacy support)
+      match /loans/{loanId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Credit cards subcollection (legacy support)
+      match /creditCards/{cardId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Settings subcollection (legacy support)
+      match /settings/{settingId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // Shared Households / Couple Workspaces
+    match /households/{householdId} {
+      allow read, write: if isAuthenticated();
+
+      match /transactions/{transactionId} {
+        allow read, write: if isAuthenticated();
+      }
+
+      match /debts/{debtId} {
+        allow read, write: if isAuthenticated();
+      }
+
+      match /loans/{loanId} {
+        allow read, write: if isAuthenticated();
+      }
+
+      match /creditCards/{cardId} {
+        allow read, write: if isAuthenticated();
+      }
+
+      match /settings/{settingId} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+  }
+}
+
