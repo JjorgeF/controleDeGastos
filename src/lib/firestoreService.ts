@@ -538,63 +538,108 @@ export const saveCreditCardsBatch = async (householdId: string, cards: CreditCar
 };
 
 export const migrateLocalDataToFirestore = async (householdId: string, localData: FinanceData, currentUser?: FirebaseUser) => {
-  const batch = writeBatch(db);
   const now = new Date().toISOString();
+  type BatchOp = { ref: any; data: any; merge?: boolean };
+  const operations: BatchOp[] = [];
 
   // Settings
   const settingsRef = doc(db, 'households', householdId, 'settings', 'general');
-  batch.set(settingsRef, cleanObject({
-    categories: localData.categories || ['Geral', 'Alimentação', 'Lazer', 'Transporte', 'Saúde', 'Educação'],
-    debtCategories: localData.debtCategories || ['Geral', 'Casa', 'Veículo', 'Pessoal'],
-    benefitMembers: localData.benefitMembers || ['Jorge', 'GO'],
-    updatedAt: now
-  }), { merge: true });
+  operations.push({
+    ref: settingsRef,
+    data: cleanObject({
+      categories: localData.categories || ['Geral', 'Alimentação', 'Lazer', 'Transporte', 'Saúde', 'Educação'],
+      debtCategories: localData.debtCategories || ['Geral', 'Casa', 'Veículo', 'Pessoal'],
+      benefitMembers: localData.benefitMembers || ['Jorge', 'GO'],
+      updatedAt: now
+    }),
+    merge: true
+  });
 
   // Transactions
-  for (const t of localData.transactions) {
-    const tRef = doc(db, 'households', householdId, 'transactions', t.id);
-    batch.set(tRef, cleanObject({
-      ...t,
-      householdId,
-      createdByUid: t.createdByUid || currentUser?.uid,
-      createdByName: t.createdByName || currentUser?.displayName || 'Jorge',
-      createdByColor: t.createdByColor || 'blue',
-      updatedAt: now
-    }));
-  }
-
-  // Debts
-  for (const d of localData.debts) {
-    const dRef = doc(db, 'households', householdId, 'debts', d.id);
-    batch.set(dRef, cleanObject({
-      ...d,
-      householdId,
-      updatedAt: now
-    }));
-  }
-
-  // Loans
-  for (const l of localData.loans) {
-    const lRef = doc(db, 'households', householdId, 'loans', l.id);
-    batch.set(lRef, cleanObject({
-      ...l,
-      householdId,
-      updatedAt: now
-    }));
-  }
-
-  // Credit Cards
-  if (localData.creditCards && localData.creditCards.length > 0) {
-    for (const c of localData.creditCards) {
-      const cRef = doc(db, 'households', householdId, 'creditCards', c.id);
-      batch.set(cRef, cleanObject({
-        ...c,
-        householdId,
-        updatedAt: now
-      }));
+  if (localData.transactions && Array.isArray(localData.transactions)) {
+    for (const t of localData.transactions) {
+      const id = t.id || crypto.randomUUID();
+      const tRef = doc(db, 'households', householdId, 'transactions', id);
+      operations.push({
+        ref: tRef,
+        data: cleanObject({
+          ...t,
+          id,
+          householdId,
+          createdByUid: t.createdByUid || currentUser?.uid,
+          createdByName: t.createdByName || currentUser?.displayName || 'Jorge',
+          createdByColor: t.createdByColor || 'blue',
+          updatedAt: now
+        })
+      });
     }
   }
 
-  await batch.commit();
+  // Debts
+  if (localData.debts && Array.isArray(localData.debts)) {
+    for (const d of localData.debts) {
+      const id = d.id || crypto.randomUUID();
+      const dRef = doc(db, 'households', householdId, 'debts', id);
+      operations.push({
+        ref: dRef,
+        data: cleanObject({
+          ...d,
+          id,
+          householdId,
+          updatedAt: now
+        })
+      });
+    }
+  }
+
+  // Loans
+  if (localData.loans && Array.isArray(localData.loans)) {
+    for (const l of localData.loans) {
+      const id = l.id || crypto.randomUUID();
+      const lRef = doc(db, 'households', householdId, 'loans', id);
+      operations.push({
+        ref: lRef,
+        data: cleanObject({
+          ...l,
+          id,
+          householdId,
+          updatedAt: now
+        })
+      });
+    }
+  }
+
+  // Credit Cards
+  if (localData.creditCards && Array.isArray(localData.creditCards)) {
+    for (const c of localData.creditCards) {
+      const id = c.id || crypto.randomUUID();
+      const cRef = doc(db, 'households', householdId, 'creditCards', id);
+      operations.push({
+        ref: cRef,
+        data: cleanObject({
+          ...c,
+          id,
+          householdId,
+          updatedAt: now
+        })
+      });
+    }
+  }
+
+  // Commit operations in chunks of max 400 to prevent exceeding Firestore's 500-operation limit
+  const CHUNK_SIZE = 400;
+  for (let i = 0; i < operations.length; i += CHUNK_SIZE) {
+    const chunk = operations.slice(i, i + CHUNK_SIZE);
+    const batch = writeBatch(db);
+    for (const op of chunk) {
+      if (op.merge) {
+        batch.set(op.ref, op.data, { merge: true });
+      } else {
+        batch.set(op.ref, op.data);
+      }
+    }
+    await batch.commit();
+  }
 };
+
 

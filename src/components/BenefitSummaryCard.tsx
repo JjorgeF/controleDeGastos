@@ -199,20 +199,34 @@ export const BenefitSummaryCard: React.FC<BenefitSummaryCardProps> = ({
               {memberStats.map((st) => (
                 <div 
                   key={st.member}
-                  className="bg-black/30 border border-white/5 hover:border-emerald-500/30 rounded-2xl p-3 transition-all flex flex-col justify-between"
+                  className="bg-black/35 border border-white/5 hover:border-emerald-500/30 rounded-2xl p-2.5 sm:p-3 transition-all flex flex-col justify-between overflow-hidden shadow-sm"
                 >
-                  <div className="flex items-center justify-between mb-1 gap-2">
+                  <div className="flex items-center justify-between mb-1.5 gap-1.5">
                     <div className="flex items-center gap-1.5 min-w-0">
                       <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold text-[10px] flex items-center justify-center border border-emerald-500/30 shrink-0">
                         {st.member.charAt(0).toUpperCase()}
                       </div>
-                      <span className="text-xs font-semibold text-white truncate">{st.member}</span>
+                      <span className="text-xs font-semibold text-white truncate" title={st.member}>
+                        {st.member}
+                      </span>
                     </div>
-                    <span className="text-xs font-bold text-emerald-400 whitespace-nowrap">{formatCurrency(st.balance)}</span>
+                    <span className="text-xs font-bold text-emerald-400 tabular-nums shrink-0">
+                      {formatCurrency(st.balance)}
+                    </span>
                   </div>
-                  <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-white/5 gap-2">
-                    <span className="whitespace-nowrap">Rec: <strong className="text-zinc-300">+{formatCurrency(st.income)}</strong></span>
-                    <span className="whitespace-nowrap">Gasto: <strong className="text-red-400">-{formatCurrency(st.expense)}</strong></span>
+                  <div className="pt-1.5 border-t border-white/5 space-y-0.5 text-[10.5px]">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-zinc-400 text-[10px] shrink-0">Rec:</span>
+                      <span className="font-semibold text-zinc-200 tabular-nums truncate text-right">
+                        +{formatCurrency(st.income)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-zinc-400 text-[10px] shrink-0">Gasto:</span>
+                      <span className="font-semibold text-red-400 tabular-nums truncate text-right">
+                        -{formatCurrency(st.expense)}
+                      </span>
+                    </div>
                   </div>
                 </div>
               ))}

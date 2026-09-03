@@ -105,6 +105,8 @@ import { BenefitSummaryCard } from './components/BenefitSummaryCard';
 import { ManageCardsModal } from './components/ManageCardsModal';
 import { CreditCardsSummaryCard } from './components/CreditCardsSummaryCard';
 import { CoupleSyncModal, COLOR_CONFIG, SettingsTab } from './components/CoupleSyncModal';
+import { PWAInstallButton } from './components/PWAInstallButton';
+import { OfflineIndicator } from './components/OfflineIndicator';
 import { inferPersonFromDescription } from './lib/utils';
 
 const STORAGE_KEY = 'financas_pro_data_v2';
@@ -1603,14 +1605,12 @@ export default function App() {
 
   const handleMigrateLocalData = async () => {
     if (!user) return;
+    const toastId = toast.loading('Enviando dados locais para o Firestore...');
     try {
-      toast.loading('Enviando dados locais para o Firestore...');
-      await migrateLocalDataToFirestore(currentHouseholdId, data);
-      toast.dismiss();
-      toast.success('Todos os dados locais foram salvos no Firebase com sucesso!');
+      await migrateLocalDataToFirestore(currentHouseholdId, data, user);
+      toast.success('Todos os dados locais foram salvos no Firebase com sucesso!', { id: toastId });
     } catch (err: any) {
-      toast.dismiss();
-      toast.error('Erro ao migrar dados: ' + err.message);
+      toast.error('Erro ao migrar dados: ' + (err?.message || 'Erro'), { id: toastId });
     }
   };
 
@@ -1638,26 +1638,59 @@ export default function App() {
     toast.success('Backup Excel exportado');
   };
 
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
         const importedData = JSON.parse(event.target?.result as string);
         if (importedData.transactions && Array.isArray(importedData.transactions)) {
-          setData({
+          const formattedData: FinanceData = {
             ...importedData,
-            debts: importedData.debts || [],
-            loans: importedData.loans || []
-          });
-          toast.success('Dados importados com sucesso');
+            transactions: importedData.transactions.map((t: any) => ({
+              ...t,
+              id: t.id || crypto.randomUUID(),
+              createdByName: t.createdByName || userProfile?.displayName || user?.displayName || 'Jorge',
+              createdByColor: t.createdByColor || (userProfile?.preferredColor as AuthorColor) || 'blue',
+              createdByUid: t.createdByUid || user?.uid
+            })),
+            debts: (importedData.debts || []).map((d: any) => ({ ...d, id: d.id || crypto.randomUUID() })),
+            loans: (importedData.loans || []).map((l: any) => ({ ...l, id: l.id || crypto.randomUUID() })),
+            creditCards: (importedData.creditCards || []).map((c: any) => ({ ...c, id: c.id || crypto.randomUUID() })),
+            categories: importedData.categories || data.categories || ['Geral', 'Alimentação', 'Lazer', 'Transporte', 'Saúde', 'Educação'],
+            debtCategories: importedData.debtCategories || data.debtCategories || ['Geral', 'Casa', 'Veículo', 'Pessoal'],
+            benefitMembers: importedData.benefitMembers || data.benefitMembers || ['Jorge', 'GO']
+          };
+
+          // 1. Update React state immediately
+          setData(formattedData);
+
+          // 2. Persist to localStorage cache
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(formattedData));
+
+          // 3. If connected to Firebase / Cloud, immediately save and persist to Firestore!
+          if (user) {
+            const toastId = toast.loading('Sincronizando e salvando backup na nuvem...');
+            try {
+              await migrateLocalDataToFirestore(currentHouseholdId, formattedData, user);
+              toast.success(`Backup restaurado e salvo na nuvem com sucesso! (${formattedData.transactions.length} transações salvas)`, { id: toastId });
+            } catch (err: any) {
+              console.error('Erro ao salvar backup no Firestore:', err);
+              toast.error('Dados carregados localmente, mas ocorreu um erro ao salvar na nuvem: ' + (err?.message || 'Erro desconhecido'), { id: toastId });
+            }
+          } else {
+            toast.success(`Backup importado com sucesso! (${formattedData.transactions.length} transações carregadas). Conecte sua conta para sincronizar na nuvem.`);
+          }
         } else {
-          toast.error('Formato de arquivo inválido');
+          toast.error('Formato de arquivo inválido. Certifique-se de que é um backup do Controle Financeiro.');
         }
-      } catch (e) {
+      } catch (err: any) {
+        console.error('Erro ao ler arquivo JSON:', err);
         toast.error('Erro ao ler arquivo JSON');
+      } finally {
+        if (e.target) e.target.value = '';
       }
     };
     reader.readAsText(file);
@@ -1755,6 +1788,8 @@ export default function App() {
                 <span>Exportar & Backups</span>
               </DropdownMenuItem>
 
+              <PWAInstallButton variant="menu-item" />
+
               <DropdownMenuSeparator className="bg-white/5" />
 
               <DropdownMenuItem 
@@ -1833,8 +1868,10 @@ export default function App() {
           />
         </nav>
 
-        {/* Canto Superior Direito: Botão Adicionar */}
+        {/* Canto Superior Direito: Botão Adicionar & Instalar PWA */}
         <div className="flex items-center gap-2.5 w-full md:w-auto justify-end">
+          <PWAInstallButton variant="header" />
+
           <DropdownMenu>
             <DropdownMenuTrigger className="bg-white text-black hover:bg-white/90 rounded-2xl font-bold inline-flex items-center justify-center h-11 px-5 py-2 transition-all cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/20 shadow-lg shadow-white/5">
               <Plus className="mr-1.5 h-4 w-4" /> Adicionar
@@ -3597,6 +3634,7 @@ export default function App() {
         availableHolders={availableAuthors.map(a => a.name)}
       />
 
+      <OfflineIndicator />
       <Toaster position="bottom-right" theme="dark" />
     </div>
   );
