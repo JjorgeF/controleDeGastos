@@ -11,6 +11,7 @@ import {
   Download, 
   Upload, 
   Trash2, 
+  X,
   TrendingUp, 
   TrendingDown, 
   Wallet, 
@@ -101,8 +102,10 @@ import {
   updateAuthorNameInAllTransactions
 } from './lib/firestoreService';
 import { UserAuthButton, AuthModal } from './components/AuthModal';
+import { CashSummaryCard } from './components/CashSummaryCard';
 import { BenefitSummaryCard } from './components/BenefitSummaryCard';
 import { ManageCardsModal } from './components/ManageCardsModal';
+import { ConfirmDeleteModal } from './components/ConfirmDeleteModal';
 import { CreditCardsSummaryCard } from './components/CreditCardsSummaryCard';
 import { CoupleSyncModal, COLOR_CONFIG, SettingsTab } from './components/CoupleSyncModal';
 import { PWAInstallButton } from './components/PWAInstallButton';
@@ -221,6 +224,20 @@ export default function App() {
   const [receiveDate, setReceiveDate] = useState(format(new Date(), 'yyyy-MM-dd'));
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Modal confirmation for deleting items safely
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    isOpen: boolean;
+    title: string;
+    description?: string;
+    itemName?: string;
+    itemDetail?: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    onConfirm: () => {}
+  });
 
   // Auth listener
   useEffect(() => {
@@ -1489,6 +1506,17 @@ export default function App() {
     toast.success('Lançamento removido');
   };
 
+  const requestDeleteTransaction = (t: Transaction) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      title: 'Excluir Lançamento?',
+      description: 'Tem certeza que deseja excluir este lançamento? Esta ação removerá o registro inclusive do banco de dados na nuvem e não poderá ser desfeita.',
+      itemName: t.description,
+      itemDetail: `${formatCurrency(t.amount)} • ${t.category} • ${format(parseISO(t.date), 'dd/MM/yyyy')}`,
+      onConfirm: () => handleDeleteTransaction(t.id)
+    });
+  };
+
   const handleDeleteDebt = (id: string) => {
     if (user) {
       deleteDebtFromDb(currentHouseholdId, id).catch(console.error);
@@ -1500,6 +1528,17 @@ export default function App() {
     toast.success('Dívida removida');
   };
 
+  const requestDeleteDebt = (debt: Debt) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      title: 'Excluir Dívida?',
+      description: 'Tem certeza que deseja excluir esta dívida? Esta ação removerá o registro inclusive do banco de dados na nuvem.',
+      itemName: debt.description,
+      itemDetail: `Restante: ${formatCurrency(debt.remainingAmount)} de ${formatCurrency(debt.totalAmount)} • ${debt.category}`,
+      onConfirm: () => handleDeleteDebt(debt.id)
+    });
+  };
+
   const handleDeleteLoan = (id: string) => {
     if (user) {
       deleteLoanFromDb(currentHouseholdId, id).catch(console.error);
@@ -1509,6 +1548,49 @@ export default function App() {
       loans: prev.loans.filter(l => l.id !== id)
     }));
     toast.success('Empréstimo removido');
+  };
+
+  const requestDeleteLoan = (loan: Loan) => {
+    setDeleteConfirmation({
+      isOpen: true,
+      title: 'Excluir Valor a Receber?',
+      description: 'Tem certeza que deseja excluir este valor a receber? Esta ação removerá o registro inclusive do banco de dados na nuvem.',
+      itemName: loan.borrowerName,
+      itemDetail: `${loan.description} • Restante: ${formatCurrency(loan.remainingAmount)} de ${formatCurrency(loan.totalAmount)}`,
+      onConfirm: () => handleDeleteLoan(loan.id)
+    });
+  };
+
+  const requestDeleteCategory = (category: string) => {
+    const usage = data.transactions.filter(t => t.category === category);
+    if (usage.length > 0) {
+      const examples = usage.slice(0, 3).map(t => t.description).join(', ');
+      toast.error(`Não é possível excluir "${category}". Ela está sendo usada em ${usage.length} lançamentos (ex: ${examples}).`);
+      return;
+    }
+    setDeleteConfirmation({
+      isOpen: true,
+      title: 'Excluir Categoria?',
+      description: 'Tem certeza que deseja remover esta categoria de lançamentos?',
+      itemName: category,
+      onConfirm: () => handleDeleteCategory(category)
+    });
+  };
+
+  const requestDeleteDebtCategory = (category: string) => {
+    const usage = data.debts.filter(d => d.category === category);
+    if (usage.length > 0) {
+      const examples = usage.slice(0, 3).map(d => d.description).join(', ');
+      toast.error(`Não é possível excluir "${category}". Ela está sendo usada em ${usage.length} dívidas (ex: ${examples}).`);
+      return;
+    }
+    setDeleteConfirmation({
+      isOpen: true,
+      title: 'Excluir Categoria de Dívida?',
+      description: 'Tem certeza que deseja remover esta categoria de dívida?',
+      itemName: category,
+      onConfirm: () => handleDeleteDebtCategory(category)
+    });
   };
 
   const handleSaveCard = (card: CreditCardType) => {
@@ -1911,39 +1993,18 @@ export default function App() {
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
               {/* Carteira Principal (Dinheiro) */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-indigo-500/20 via-purple-500/10 to-emerald-500/5 p-6 md:p-8 rounded-[2.5rem] border border-white/10 backdrop-blur-xl group transition-all hover:border-white/20">
-                <div className="relative z-10 h-full flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="text-xs md:text-sm font-medium text-indigo-400 uppercase tracking-widest">Conta Corrente</p>
-                      <span className="text-[9px] sm:text-[10px] bg-indigo-500/20 text-indigo-300 font-medium px-2 py-0.5 rounded-full border border-indigo-500/30 whitespace-nowrap">Dinheiro</span>
-                    </div>
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
-                      {formatCurrency(data.transactions.reduce((acc, t) => {
-                        if (t.type === 'income' || t.type === 'loan_received') return acc + t.amount;
-                        if (t.type === 'expense' || t.type === 'debt_payment') return acc - t.amount;
-                        return acc;
-                      }, 0))}
-                    </h2>
-                    <span className="text-[11px] sm:text-xs text-muted-foreground whitespace-nowrap">saldo total acumulado</span>
-                  </div>
-                  <div className="flex gap-3 mt-8">
-                    <Button variant="secondary" className="bg-white text-black hover:bg-white/90 rounded-2xl px-6 h-11 font-bold shadow-lg shadow-white/5" onClick={() => setActiveTab('transactions')}>
-                      Extrato
-                    </Button>
-                    <Button variant="outline" className="bg-white/5 border-white/10 text-white rounded-2xl px-6 h-11 hover:bg-white/10 backdrop-blur-md" onClick={() => {
-                      setNewPocket('cash');
-                      setIsAddDialogOpen(true);
-                    }}>
-                      Lançar
-                    </Button>
-                  </div>
-                </div>
-                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 blur-[100px] rounded-full -mr-20 -mt-20 group-hover:bg-indigo-500/20 transition-all" />
-                <div className="absolute -bottom-10 -right-10 opacity-10 group-hover:opacity-20 transition-all rotate-12">
-                  <Wallet size={160} className="text-white" />
-                </div>
-              </div>
+              <CashSummaryCard
+                transactions={data.transactions}
+                members={data.benefitMembers || ['Jorge', 'GO']}
+                availableAuthors={availableAuthors}
+                onOpenAddModal={(pocket, type, authorName) => handleOpenAddModal('cash', type || 'expense', authorName)}
+                onViewTransactions={(authorFilterParam) => {
+                  setWalletFilter('cash');
+                  if (authorFilterParam) setAuthorFilter(authorFilterParam);
+                  else setAuthorFilter('all');
+                  setActiveTab('transactions');
+                }}
+              />
 
               {/* Carteira VR / VA (Benefícios) */}
               <BenefitSummaryCard
@@ -2618,7 +2679,7 @@ export default function App() {
                             variant="ghost" 
                             size="icon" 
                             className="h-8 w-8 text-muted-foreground hover:text-red-500 bg-white/5 hover:bg-red-500/20 rounded-xl"
-                            onClick={() => handleDeleteTransaction(t.id)}
+                            onClick={() => requestDeleteTransaction(t)}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
@@ -2701,7 +2762,7 @@ export default function App() {
                                 variant="ghost" 
                                 size="icon" 
                                 className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 opacity-70 sm:opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={() => handleDeleteTransaction(t.id)}
+                                onClick={() => requestDeleteTransaction(t)}
                                 title="Excluir lançamento"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
@@ -2745,7 +2806,7 @@ export default function App() {
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-blue-500 transition-colors" onClick={() => handleEditLoan(loan)}>
                             <Pencil className="h-3 w-3" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-red-500" onClick={() => handleDeleteLoan(loan.id)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-red-500" onClick={() => requestDeleteLoan(loan)}>
                             <Trash2 className="h-3 w-3" />
                           </Button>
                         </div>
@@ -2801,7 +2862,7 @@ export default function App() {
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-blue-500 transition-colors" onClick={() => handleEditDebt(debt)}>
                             <Pencil className="h-3 w-3" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-red-500" onClick={() => handleDeleteDebt(debt.id)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-red-500" onClick={() => requestDeleteDebt(debt)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -3104,9 +3165,10 @@ export default function App() {
                     <Button 
                       variant="ghost" 
                       onClick={() => setIsAddingNewCategory(false)}
-                      className="h-12 w-12 rounded-xl text-red-500 hover:bg-red-500/10"
+                      className="h-12 w-12 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10"
+                      title="Cancelar"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <X className="h-4 w-4" />
                     </Button>
                   </div>
                 ) : (
@@ -3259,7 +3321,7 @@ export default function App() {
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  onClick={() => handleDeleteCategory(cat)}
+                  onClick={() => requestDeleteCategory(cat)}
                   className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -3287,7 +3349,7 @@ export default function App() {
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  onClick={() => handleDeleteDebtCategory(cat)}
+                  onClick={() => requestDeleteDebtCategory(cat)}
                   className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -3441,9 +3503,10 @@ export default function App() {
                         <Button 
                           variant="ghost" 
                           onClick={() => setIsAddingNewDebtCategory(false)}
-                          className="h-11 sm:h-12 w-12 rounded-xl text-red-500 hover:bg-red-500/10"
+                          className="h-11 sm:h-12 w-12 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10"
+                          title="Cancelar"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <X className="h-4 w-4" />
                         </Button>
                       </div>
                     ) : (
@@ -3632,6 +3695,16 @@ export default function App() {
         onSaveCard={handleSaveCard}
         onDeleteCard={handleDeleteCard}
         availableHolders={availableAuthors.map(a => a.name)}
+      />
+
+      <ConfirmDeleteModal
+        isOpen={deleteConfirmation.isOpen}
+        onClose={() => setDeleteConfirmation(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={deleteConfirmation.onConfirm}
+        title={deleteConfirmation.title}
+        description={deleteConfirmation.description}
+        itemName={deleteConfirmation.itemName}
+        itemDetail={deleteConfirmation.itemDetail}
       />
 
       <OfflineIndicator />

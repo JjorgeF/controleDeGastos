@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Trash2, Pencil, CreditCard as CardIcon, Check, Calendar, AlertCircle, Shield, DollarSign, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 
 export const CARD_COLORS: { id: CardColor; label: string; bgGradient: string; border: string; accent: string }[] = [
   { id: 'purple', label: 'Roxo (Nubank)', bgGradient: 'from-purple-900 via-indigo-900 to-zinc-950', border: 'border-purple-500/40', accent: 'bg-purple-500' },
@@ -50,6 +51,7 @@ export const ManageCardsModal: React.FC<ManageCardsModalProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editingCardId, setEditingCardId] = useState<string | null>(null);
+  const [cardToDelete, setCardToDelete] = useState<CreditCardType | null>(null);
 
   // Form states
   const [name, setName] = useState('');
@@ -435,11 +437,7 @@ export const ManageCardsModal: React.FC<ManageCardsModalProps> = ({
                               </button>
                               <button
                                 type="button"
-                                onClick={() => {
-                                  if (confirm(`Tem certeza que deseja excluir o cartão "${card.name}"?`)) {
-                                    onDeleteCard(card.id);
-                                  }
-                                }}
+                                onClick={() => setCardToDelete(card)}
                                 className="w-7 h-7 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-red-500/10 flex items-center justify-center transition-colors cursor-pointer"
                                 title="Excluir Cartão"
                               >
@@ -511,6 +509,22 @@ export const ManageCardsModal: React.FC<ManageCardsModalProps> = ({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      <ConfirmDeleteModal
+        isOpen={!!cardToDelete}
+        onClose={() => setCardToDelete(null)}
+        onConfirm={() => {
+          if (cardToDelete) {
+            onDeleteCard(cardToDelete.id);
+            toast.success(`Cartão "${cardToDelete.name}" excluído`);
+            setCardToDelete(null);
+          }
+        }}
+        title="Excluir Cartão de Crédito?"
+        description="Tem certeza que deseja excluir este cartão? Esta ação removerá o cartão e seu limite das configurações na nuvem."
+        itemName={cardToDelete?.name}
+        itemDetail={`Titular: ${cardToDelete?.holder || 'Não definido'} • Limite: ${cardToDelete ? formatCurrency(cardToDelete.limit) : ''}`}
+      />
     </Dialog>
   );
 };

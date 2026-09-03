@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 
 interface ManageMembersModalProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ export const ManageMembersModal: React.FC<ManageMembersModalProps> = ({
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingValue, setEditingValue] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [memberToDelete, setMemberToDelete] = useState<{ index: number; name: string } | null>(null);
 
   const handleAdd = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -199,8 +201,8 @@ export const ManageMembersModal: React.FC<ManageMembersModalProps> = ({
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-8 w-8 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg disabled:opacity-30"
-                        onClick={() => handleRemove(index)}
+                        className="h-8 w-8 text-zinc-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg disabled:opacity-30 cursor-pointer"
+                        onClick={() => setMemberToDelete({ index, name: member })}
                         disabled={members.length <= 1}
                         title={members.length <= 1 ? "Mínimo 1 titular obrigatório" : "Remover titular"}
                       >
@@ -224,6 +226,20 @@ export const ManageMembersModal: React.FC<ManageMembersModalProps> = ({
           </Button>
         </div>
       </DialogContent>
+
+      <ConfirmDeleteModal
+        isOpen={!!memberToDelete}
+        onClose={() => setMemberToDelete(null)}
+        onConfirm={() => {
+          if (memberToDelete) {
+            handleRemove(memberToDelete.index);
+            setMemberToDelete(null);
+          }
+        }}
+        title="Remover Titular?"
+        description="Tem certeza que deseja remover este titular de benefícios?"
+        itemName={memberToDelete?.name}
+      />
     </Dialog>
   );
 };

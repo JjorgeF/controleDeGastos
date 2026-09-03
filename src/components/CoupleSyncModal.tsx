@@ -47,6 +47,7 @@ import {
   updateUserMemberProfile
 } from '../lib/firestoreService';
 import { FirebaseUser, auth, firebaseSignOut } from '../lib/firebase';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 
 export type SettingsTab = 'profile' | 'benefits' | 'couple' | 'backup';
 
@@ -137,6 +138,7 @@ export function CoupleSyncModal({
   const [partnerEmail, setPartnerEmail] = useState('');
   const [isInviting, setIsInviting] = useState(false);
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
+  const [memberToDelete, setMemberToDelete] = useState<{ index: number; name: string } | null>(null);
 
   // Member editing state
   const [editingMyName, setEditingMyName] = useState(userProfile?.displayName || user?.displayName || 'Jorge');
@@ -705,7 +707,7 @@ export function CoupleSyncModal({
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleRemoveBenefitMember(idx)}
+                          onClick={() => setMemberToDelete({ index: idx, name: member })}
                           className="h-8 w-8 p-0 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-xl cursor-pointer"
                           title="Remover titular"
                         >
@@ -944,6 +946,20 @@ export function CoupleSyncModal({
           </Button>
         </div>
       </DialogContent>
+
+      <ConfirmDeleteModal
+        isOpen={!!memberToDelete}
+        onClose={() => setMemberToDelete(null)}
+        onConfirm={() => {
+          if (memberToDelete) {
+            handleRemoveBenefitMember(memberToDelete.index);
+            setMemberToDelete(null);
+          }
+        }}
+        title="Remover Titular de Benefícios?"
+        description="Tem certeza que deseja remover este titular de benefícios? Esta alteração será sincronizada na nuvem."
+        itemName={memberToDelete?.name}
+      />
     </Dialog>
   );
 }
