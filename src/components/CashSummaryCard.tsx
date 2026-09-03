@@ -169,38 +169,38 @@ export const CashSummaryCard: React.FC<CashSummaryCardProps> = ({
       <div className="relative overflow-hidden bg-gradient-to-br from-indigo-500/20 via-purple-500/10 to-emerald-500/5 p-6 md:p-7 rounded-[2.5rem] border border-white/10 backdrop-blur-xl group transition-all hover:border-white/20">
         <div className="relative z-10 h-full flex flex-col justify-between">
           <div>
-            {/* Header */}
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
-                  <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-widest text-indigo-400">
-                    Conta Corrente
-                  </span>
-                  <span className="text-[9px] sm:text-[10px] bg-indigo-500/20 text-indigo-300 font-medium px-2 py-0.5 rounded-full border border-indigo-500/30 whitespace-nowrap">
-                    Dinheiro
-                  </span>
-                </div>
-                <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-2.5">
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
-                    {formatCurrency(combinedStats.balance)}
-                  </h2>
-                  <span className="text-[11px] sm:text-xs text-muted-foreground whitespace-nowrap">
-                    saldo total acumulado
-                  </span>
-                </div>
+            {/* Header: Título, Tipo e Botão Detalhes */}
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-widest text-indigo-400">
+                  Conta Corrente
+                </span>
+                <span className="text-[9px] sm:text-[10px] bg-indigo-500/20 text-indigo-300 font-medium px-2 py-0.5 rounded-full border border-indigo-500/30 whitespace-nowrap">
+                  Dinheiro
+                </span>
               </div>
 
-              <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
+              <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   onClick={() => setIsDetailsOpen(true)}
-                  className="bg-white/5 hover:bg-white/10 border border-white/10 text-indigo-300 hover:text-white p-2 sm:px-2.5 sm:py-2 rounded-xl sm:rounded-2xl transition-all cursor-pointer flex items-center gap-1 text-xs font-medium"
+                  className="bg-white/5 hover:bg-white/10 border border-white/10 text-indigo-300 hover:text-white px-2.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1 text-xs font-medium"
                   title="Abrir detalhamento de saldo e gastos"
                 >
-                  <PieChartIcon className="h-4 w-4" />
-                  <span className="hidden sm:inline">Detalhes</span>
+                  <PieChartIcon className="h-3.5 w-3.5" />
+                  <span>Detalhes</span>
                   <ChevronRight className="h-3.5 w-3.5" />
                 </button>
               </div>
+            </div>
+
+            {/* Valor Somado Total (Exibição Completa Sem Truncar) */}
+            <div className="mb-2">
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                {formatCurrency(combinedStats.balance)}
+              </h2>
+              <span className="text-[11px] sm:text-xs text-muted-foreground block mt-0.5">
+                saldo total acumulado
+              </span>
             </div>
 
             {/* Individual Breakdown Pills / Mini Cards (Replicado de Benefícios) */}

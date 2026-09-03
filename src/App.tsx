@@ -1911,13 +1911,8 @@ export default function App() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[#080a10] p-1 border border-white/10 shadow-lg shadow-emerald-500/10 flex items-center justify-center shrink-0 overflow-hidden hover:scale-105 transition-transform cursor-pointer">
-              <img src="/icon.svg" alt="FC" className="w-full h-full object-contain rounded-xl" />
-            </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white font-sans">Controle Financeiro</h1>
-            </div>
+          <div className="flex items-center">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white font-sans">Controle Financeiro</h1>
           </div>
         </div>
 

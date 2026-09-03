@@ -132,8 +132,8 @@ const InstallInstructionsModal: React.FC<InstallModalProps> = ({ isIOS, onClose 
         </button>
 
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-[#080a10] border border-white/10 p-1 flex items-center justify-center shrink-0 overflow-hidden shadow-lg shadow-emerald-500/10">
-            <img src="/icon.svg" alt="FC" className="w-full h-full object-contain rounded-xl" />
+          <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+            <Smartphone className="w-6 h-6" />
           </div>
           <div>
             <h3 className="text-base font-bold text-white">Instalar Controle Financeiro</h3>

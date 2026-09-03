@@ -152,46 +152,48 @@ export const BenefitSummaryCard: React.FC<BenefitSummaryCardProps> = ({
       <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500/15 via-teal-950/20 to-zinc-950 p-6 md:p-7 rounded-[2.5rem] border border-emerald-500/20 backdrop-blur-xl group transition-all hover:border-emerald-500/40">
         <div className="relative z-10 h-full flex flex-col justify-between">
           <div>
-            {/* Header */}
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
-                  <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-widest text-emerald-400">
-                    Benefícios (VR / VA do Casal)
-                  </span>
-                  <span className="text-[9px] sm:text-[10px] bg-emerald-500/20 text-emerald-300 font-medium px-2 py-0.5 rounded-full border border-emerald-500/30 whitespace-nowrap">
-                    Somado & Separado
-                  </span>
-                </div>
-                <div className="flex flex-col sm:flex-row sm:items-baseline sm:gap-2.5">
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight whitespace-nowrap">
-                    {formatCurrency(combinedStats.balance)}
-                  </h2>
-                  <span className="text-[11px] sm:text-xs text-muted-foreground whitespace-nowrap">saldo total somado</span>
-                </div>
+            {/* Header: Título, Badges e Ações */}
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-widest text-emerald-400">
+                  Benefícios (VR / VA do Casal)
+                </span>
+                <span className="text-[9px] sm:text-[10px] bg-emerald-500/20 text-emerald-300 font-medium px-2 py-0.5 rounded-full border border-emerald-500/30 whitespace-nowrap">
+                  Somado & Separado
+                </span>
               </div>
 
-              <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
+              <div className="flex items-center gap-1.5 shrink-0">
                 {onUpdateMembers && (
                   <button
                     onClick={() => setIsManageMembersOpen(true)}
-                    className="bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 hover:text-white p-2 sm:px-2.5 sm:py-2 rounded-xl sm:rounded-2xl transition-all cursor-pointer flex items-center gap-1.5 text-xs font-medium"
+                    className="bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 hover:text-white px-2.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 text-xs font-medium"
                     title="Gerenciar titulares do benefício"
                   >
-                    <Users className="h-4 w-4 text-emerald-400" />
+                    <Users className="h-3.5 w-3.5 text-emerald-400" />
                     <span className="hidden sm:inline">Titulares</span>
                   </button>
                 )}
                 <button
                   onClick={() => setIsDetailsOpen(true)}
-                  className="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 p-2 sm:px-2.5 sm:py-2 rounded-xl sm:rounded-2xl transition-all cursor-pointer flex items-center gap-1 text-xs font-medium"
+                  className="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 px-2.5 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1 text-xs font-medium"
                   title="Abrir detalhamento completo"
                 >
-                  <PieChartIcon className="h-4 w-4" />
-                  <span className="hidden sm:inline">Ver Detalhes</span>
+                  <PieChartIcon className="h-3.5 w-3.5" />
+                  <span>Detalhes</span>
                   <ChevronRight className="h-3.5 w-3.5" />
                 </button>
               </div>
+            </div>
+
+            {/* Valor Somado Total */}
+            <div className="mb-2">
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                {formatCurrency(combinedStats.balance)}
+              </h2>
+              <span className="text-[11px] sm:text-xs text-muted-foreground block mt-0.5">
+                saldo total somado
+              </span>
             </div>
 
             {/* Individual Breakdown Pills / Mini Cards */}
