@@ -54,7 +54,6 @@ export const ManageCardsModal: React.FC<ManageCardsModalProps> = ({
   // Form states
   const [name, setName] = useState('');
   const [holder, setHolder] = useState(availableHolders[0] || 'Jorge');
-  const [lastDigits, setLastDigits] = useState('');
   const [color, setColor] = useState<CardColor>('purple');
   const [limit, setLimit] = useState('');
   const [closingDay, setClosingDay] = useState('25');
@@ -63,7 +62,6 @@ export const ManageCardsModal: React.FC<ManageCardsModalProps> = ({
   const resetForm = () => {
     setName('');
     setHolder(availableHolders[0] || 'Jorge');
-    setLastDigits('');
     setColor('purple');
     setLimit('');
     setClosingDay('25');
@@ -76,7 +74,6 @@ export const ManageCardsModal: React.FC<ManageCardsModalProps> = ({
     setName(presetName || '');
     setColor(presetColor || 'purple');
     setHolder(availableHolders[0] || 'Jorge');
-    setLastDigits('');
     setLimit('');
     setClosingDay('25');
     setDueDay('5');
@@ -87,7 +84,6 @@ export const ManageCardsModal: React.FC<ManageCardsModalProps> = ({
   const handleStartEdit = (card: CreditCardType) => {
     setName(card.name);
     setHolder(card.holder || availableHolders[0] || 'Jorge');
-    setLastDigits(card.lastDigits || '');
     setColor((card.color as CardColor) || 'purple');
     setLimit(card.limit ? card.limit.toString() : '');
     setClosingDay(card.closingDay ? card.closingDay.toString() : '25');
@@ -111,7 +107,6 @@ export const ManageCardsModal: React.FC<ManageCardsModalProps> = ({
       id: editingCardId || `card_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
       name: name.trim(),
       holder: holder.trim() || undefined,
-      lastDigits: lastDigits.replace(/\D/g, '').slice(0, 4) || undefined,
       color,
       limit: isNaN(parsedLimit || 0) ? undefined : parsedLimit,
       closingDay: parsedClosing && parsedClosing >= 1 && parsedClosing <= 31 ? parsedClosing : 25,
@@ -256,33 +251,18 @@ export const ManageCardsModal: React.FC<ManageCardsModalProps> = ({
 
                 <div className="space-y-1.5">
                   <Label className="text-[11px] uppercase tracking-wider text-zinc-300 font-bold">Titular do Cartão</Label>
-                  <Select value={holder} onValueChange={setHolder}>
-                    <SelectTrigger className="bg-white/5 border-white/10 text-white rounded-xl h-10 text-xs">
-                      <SelectValue placeholder="Selecione o titular" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-zinc-900 border-white/10 text-white rounded-xl">
-                      {availableHolders.map(h => (
-                        <SelectItem key={h} value={h}>{h}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-[11px] uppercase tracking-wider text-zinc-300 font-bold">Últimos 4 Dígitos</Label>
                   <Input
-                    placeholder="Ex: 8821"
-                    maxLength={4}
-                    value={lastDigits}
-                    onChange={(e) => setLastDigits(e.target.value.replace(/\D/g, ''))}
+                    placeholder="Ex: Jorge, JF"
+                    value={holder}
+                    onChange={(e) => setHolder(e.target.value)}
                     className="bg-white/5 border-white/10 text-white rounded-xl h-10 text-xs"
                   />
                 </div>
+              </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-[11px] uppercase tracking-wider text-zinc-300 font-bold">Dia Fechamento</Label>
+                  <Label className="text-[11px] uppercase tracking-wider text-zinc-300 font-bold">Data de Fechamento</Label>
                   <Input
                     type="number"
                     min={1}
@@ -295,7 +275,7 @@ export const ManageCardsModal: React.FC<ManageCardsModalProps> = ({
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-[11px] uppercase tracking-wider text-zinc-300 font-bold">Dia Vencimento</Label>
+                  <Label className="text-[11px] uppercase tracking-wider text-zinc-300 font-bold">Data Limite p/ Pagamento (Venc.)</Label>
                   <Input
                     type="number"
                     min={1}
@@ -349,9 +329,6 @@ export const ManageCardsModal: React.FC<ManageCardsModalProps> = ({
                     <div>
                       <p className="text-sm font-black text-white tracking-wide">{name || 'Nome do Cartão'}</p>
                       <p className="text-[10px] text-zinc-300 uppercase font-medium">{holder || 'Titular'}</p>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-xs font-mono text-zinc-300">•••• {lastDigits || '0000'}</span>
                     </div>
                   </div>
                   <div className="flex justify-between items-end mt-4 text-[10px] text-zinc-300">
@@ -444,11 +421,6 @@ export const ManageCardsModal: React.FC<ManageCardsModalProps> = ({
                             <div>
                               <div className="flex items-center gap-2">
                                 <h4 className="text-base font-black text-white tracking-wide">{card.name}</h4>
-                                {card.lastDigits && (
-                                  <span className="text-[10px] font-mono bg-black/40 text-zinc-300 px-1.5 py-0.5 rounded-md border border-white/10">
-                                    •••• {card.lastDigits}
-                                  </span>
-                                )}
                               </div>
                               <p className="text-[11px] text-zinc-300 font-semibold">{card.holder || 'Titular não definido'}</p>
                             </div>

@@ -129,9 +129,6 @@ export const CreditCardsSummaryCard: React.FC<CreditCardsSummaryCardProps> = ({
                       <div>
                         <div className="flex items-center gap-1.5">
                           <p className="text-xs font-bold text-white tracking-wide truncate max-w-[120px]">{card.name}</p>
-                          {card.lastDigits && (
-                            <span className="text-[9px] font-mono text-zinc-300">•••• {card.lastDigits}</span>
-                          )}
                         </div>
                         <p className="text-[10px] text-zinc-300 font-medium">{card.holder || 'Titular'}</p>
                       </div>

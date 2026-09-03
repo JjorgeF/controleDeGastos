@@ -96,6 +96,8 @@ import {
   saveUserSettings, 
   migrateLocalDataToFirestore,
   getOrCreateUserProfile,
+  saveCreditCard,
+  deleteCreditCardFromDb,
   updateAuthorNameInAllTransactions
 } from './lib/firestoreService';
 import { UserAuthButton, AuthModal } from './components/AuthModal';
@@ -1505,6 +1507,32 @@ export default function App() {
       loans: prev.loans.filter(l => l.id !== id)
     }));
     toast.success('Empréstimo removido');
+  };
+
+  const handleSaveCard = (card: CreditCardType) => {
+    if (user) {
+      saveCreditCard(currentHouseholdId, card).catch(console.error);
+    }
+    setData(prev => {
+      const cards = prev.creditCards || [];
+      const existing = cards.findIndex(c => c.id === card.id);
+      if (existing >= 0) {
+        const updated = [...cards];
+        updated[existing] = card;
+        return { ...prev, creditCards: updated };
+      }
+      return { ...prev, creditCards: [...cards, card] };
+    });
+  };
+
+  const handleDeleteCard = (id: string) => {
+    if (user) {
+      deleteCreditCardFromDb(currentHouseholdId, id).catch(console.error);
+    }
+    setData(prev => ({
+      ...prev,
+      creditCards: (prev.creditCards || []).filter(c => c.id !== id)
+    }));
   };
 
   const handleReplicateTransaction = (template: Transaction) => {
@@ -3561,7 +3589,12 @@ export default function App() {
         isOpen={isManageCardsModalOpen}
         onClose={() => setIsManageCardsModalOpen(false)}
         cards={data.creditCards || []}
-        householdId={currentHouseholdId}
+        debts={data.debts || []}
+        transactions={data.transactions || []}
+        currentMonth={currentMonth}
+        onSaveCard={handleSaveCard}
+        onDeleteCard={handleDeleteCard}
+        availableHolders={availableAuthors.map(a => a.name)}
       />
 
       <Toaster position="bottom-right" theme="dark" />
