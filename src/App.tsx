@@ -1912,8 +1912,8 @@ export default function App() {
           </DropdownMenu>
 
           <div className="flex items-center gap-3">
-            <div className="bg-white/10 p-2.5 rounded-2xl backdrop-blur-sm border border-white/5 shadow-inner">
-              <Wallet className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-[#080a10] p-1 border border-white/10 shadow-lg shadow-emerald-500/10 flex items-center justify-center shrink-0 overflow-hidden hover:scale-105 transition-transform cursor-pointer">
+              <img src="/icon.svg" alt="FC" className="w-full h-full object-contain rounded-xl" />
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white font-sans">Controle Financeiro</h1>
